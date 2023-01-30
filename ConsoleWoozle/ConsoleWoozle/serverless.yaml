@@ -1,0 +1,76 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless Application that uses the ASP.NET CORE framewaork running in Amazon Lambda.
+Parameters:
+  LambdaName:
+    Type: String
+    Description: Name of the lambda function
+    MinLength: '0'
+    Default: Woozle
+
+Resources:
+  WoozleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - s3.amazonaws.com
+              Action:
+                - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Action:
+                  - lambda:InvokeFunction
+                  - lambda:GetEventSourceMapping
+                  - lambda:GetFunction
+                  - lambda:GetFunctionConfiguration
+                Effect: Allow
+                Resource:
+                  - {"Fn::Join": ["", ["arn:aws:lambda:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":lambda", {"Ref": "LambdaName"}, "*"]]}
+                  - {"Fn::Join": ["", ["arn:aws:lambda:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":functionlambda", {"Ref": "LambdaName"}, "*"]]}
+              -
+                Action:
+                  - secretsmanager:ListSecrest
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:ListSecretVersionIds
+                Effect: Allow
+                Resource:
+                  - {"Fn::Join": ["", ["arn:aws:secretsmanager:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":secret:secret:SpotifyCredentials", "*"]]}
+              -
+                Action:
+                  - logs:CreateLogStream
+                  - logs:CreateLogGroup
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: 'arn:aws:logs:*:*:log-group:/aws/lambda-insights:*'
+              -
+                Action:
+                  - kms:Decrypt
+                Effect: Allow
+                Resource: "*"
+      Description: "Role for Woozle"
+      RoleName: WoozleRole
+
+  CreateFileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: CreateWoozleFile
+      Handler: ConsoleWoozle::ConsoleWoozle.Function::CreateFile
+      Runtime: net6.0
+      CodeUri: ''
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 2
+      MemorySize: 1024
+      Timeout: 30
+      Role:
+        {"Fn::GetAtt" : ["WoozleRole", "Arn"]}
