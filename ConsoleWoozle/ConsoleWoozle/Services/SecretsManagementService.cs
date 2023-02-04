@@ -9,7 +9,7 @@ namespace ConsoleWoozle.Services
 {
     public interface ISecretsManagementService
     {
-        Task<T?> GetSecret<T>(string secretArn);
+        Task<T?> GetSecretAsync<T>(string secretArn);
     }
 
     public class SecretsManagementService : ISecretsManagementService
@@ -22,7 +22,7 @@ namespace ConsoleWoozle.Services
             AmazonSecretsManagerClient secretsManager = new AmazonSecretsManagerClient(RegionEndpoint.USEast1);
             _secretsManagerCache= new SecretsManagerCache(secretsManager);
         }
-        public async Task<T?> GetSecret<T>(string secretArn)
+        public async Task<T?> GetSecretAsync<T>(string secretArn)
         {
             GetSecretValueResponse response = new();
             try
@@ -41,7 +41,7 @@ namespace ConsoleWoozle.Services
             else
             {
                 StreamReader streamReader = new(response.SecretBinary);
-                string secretString = Encoding.UTF8.GetString(Convert.FromBase64String(await streamReader.ReadToEndAsync()));
+                string secretString = Encoding.UTF8.GetString(Convert.FromBase64String(await streamReader.ReadToEndAsync().ConfigureAwait(false)));
                 return JsonConvert.DeserializeObject<T>(secretString);
             }
         }

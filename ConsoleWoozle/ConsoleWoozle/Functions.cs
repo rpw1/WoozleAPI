@@ -29,5 +29,9 @@ namespace ConsoleWoozle
         }
         #endregion
 
+        public static void Main(string[] args)
+        {
+
+        }
     }
 }

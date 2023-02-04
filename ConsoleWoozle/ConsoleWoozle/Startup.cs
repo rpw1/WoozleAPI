@@ -1,6 +1,4 @@
-﻿using Amazon.Auth.AccessControlPolicy;
-using Amazon.Runtime.Internal;
-using ConsoleWoozle.Configuration;
+﻿using ConsoleWoozle.Configuration;
 using ConsoleWoozle.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,12 +7,7 @@ using Polly;
 using Polly.Extensions.Http;
 using Polly.Retry;
 using Polly.Timeout;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConsoleWoozle
 {
@@ -42,8 +35,9 @@ namespace ConsoleWoozle
             {
                 _configuration = configurationService.GetConfiguration();
                 _serviceCollection.AddSingleton(GetSpotifyCredentialsConfiguration(_configuration));
+                _serviceCollection.AddSingleton(GetSpotifyArtistConfiguration(_configuration));
                 _serviceCollection.AddSingleton<ISecretsManagementService, SecretsManagementService>();
-                _serviceCollection.AddSingleton<ISpotifyAuthenticationService, SpotifyAuthenticationService>();
+                _serviceCollection.AddSingleton<ISpotifyAPIService, SpotifyAPIService>();
                 _serviceCollection.AddLogging(loggingBuilder =>
                 {
                     loggingBuilder.ClearProviders();
@@ -60,6 +54,11 @@ namespace ConsoleWoozle
         public ISecretsManagementService? GetSecretsManagementService()
         {
             return _serviceProvider?.GetService<ISecretsManagementService>();
+        }
+
+        public ISpotifyAPIService? GetSpotifyAPIService()
+        {
+            return _serviceProvider?.GetService<ISpotifyAPIService>();
         }
         #endregion
 
@@ -119,6 +118,16 @@ namespace ConsoleWoozle
                 CredentialsArn = configuration.GetValue<string>(ConfigurationKeys.SpotifyCredentialsArn),
                 AutenticationUrl = configuration.GetValue<string>(ConfigurationKeys.SpotifyAuthenticationUrl),
                 BaseUrl = configuration.GetValue<string>(ConfigurationKeys.SpotifyBaseUrl)
+            };
+        }
+        #endregion
+
+        #region GetSpotifyArtistConfiguration
+        private static SpotifyArtistConfiguration GetSpotifyArtistConfiguration(IConfiguration configuration)
+        {
+            return new SpotifyArtistConfiguration
+            {
+                ArtistIds = configuration.GetValue<List<string>>(ConfigurationKeys.SpotifyArtistIds) ?? new List<string>(),
             };
         }
         #endregion

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
-namespace ConsoleWoozle.Domain
+namespace ConsoleWoozle.Domain.SpotifyAPIResponses
 {
     public class SpotifyAlbumResponse : SpotifyCommonAlbumFields
     {
@@ -25,9 +23,9 @@ namespace ConsoleWoozle.Domain
         public int? Popularity { get; set; }
 
         [JsonPropertyName("restrictions")]
-        public Dictionary<string,object>? Restrictions { get; set; }
+        public Dictionary<string, object>? Restrictions { get; set; }
 
         [JsonPropertyName("tracks")]
-        public SpotifyBaseResponse? Tracks { get; set; }
+        public Dictionary<string, object>? Tracks { get; set; } //This is SpotifyBaseResponse
     }
 }
