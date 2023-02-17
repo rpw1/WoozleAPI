@@ -22,6 +22,9 @@ namespace ConsoleWoozleTest
             var spotifyAPIService = _startup.GetSpotifyAPIService();
             Assert.True(spotifyAPIService != null);
 
+            var buildSolutionService = _startup.GetBuildSolutionService();
+            Assert.True(buildSolutionService != null);
+
         }
     }
 }

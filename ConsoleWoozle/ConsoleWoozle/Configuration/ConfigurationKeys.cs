@@ -8,7 +8,8 @@ namespace ConsoleWoozle.Configuration
 {
     public static class ConfigurationKeys
     {
-        public const string SpotifyCredentialsArn = "Spotify:SecretsManager:CredentialsArn";
+        public const string SpotifyCredentialsArn = "AWS:SecretsManager:CredentialsArn";
+        public const string S3BucketPath = "AWS:S3:Bucket";
 
         public const string SpotifyAuthenticationUrl = "Spotify:Urls:AuthenticationUrl";
         public const string SpotifyBaseUrl = "Spotify:Urls:BaseUrl";

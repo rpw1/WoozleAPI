@@ -1,4 +1,8 @@
-﻿using ConsoleWoozle.Configuration;
+﻿using Amazon;
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.Runtime;
+using Amazon.S3;
+using ConsoleWoozle.Configuration;
 using ConsoleWoozle.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,8 +40,12 @@ namespace ConsoleWoozle
                 _configuration = configurationService.GetConfiguration();
                 _serviceCollection.AddSingleton(GetSpotifyCredentialsConfiguration(_configuration));
                 _serviceCollection.AddSingleton(GetSpotifyArtistConfiguration(_configuration));
+                _serviceCollection.AddSingleton(GetS3Configuration(_configuration));
                 _serviceCollection.AddSingleton<ISecretsManagementService, SecretsManagementService>();
                 _serviceCollection.AddSingleton<ISpotifyAPIService, SpotifyAPIService>();
+                _serviceCollection.AddSingleton<IBuildSolutionService, BuildSolutionService>();
+                _serviceCollection.AddAWSService<IAmazonS3>(ConfigureS3Client());
+                _serviceCollection.AddSingleton<IS3Service, S3Service>();
                 _serviceCollection.AddLogging(loggingBuilder =>
                 {
                     loggingBuilder.ClearProviders();
@@ -59,6 +67,11 @@ namespace ConsoleWoozle
         public ISpotifyAPIService? GetSpotifyAPIService()
         {
             return _serviceProvider?.GetService<ISpotifyAPIService>();
+        }
+
+        public IBuildSolutionService? GetBuildSolutionService()
+        {
+            return _serviceProvider?.GetService<IBuildSolutionService>();
         }
         #endregion
 
@@ -128,6 +141,27 @@ namespace ConsoleWoozle
             return new SpotifyArtistConfiguration
             {
                 ArtistIds = configuration.GetValue<List<string>>(ConfigurationKeys.SpotifyArtistIds) ?? new List<string>(),
+            };
+        }
+        #endregion
+
+        #region ConfigureS3Client
+        public AWSOptions ConfigureS3Client()
+        {
+            return new AWSOptions
+            {
+                Region = RegionEndpoint.USEast1
+            };
+        }
+        #endregion
+
+        #region S3Configuration
+        public static S3Configuration GetS3Configuration(IConfiguration configuration)
+        {
+            return new S3Configuration
+            {
+                RegionEndpoint = RegionEndpoint.USEast1,
+                Bucket = configuration.GetValue<string>(ConfigurationKeys.S3BucketPath)
             };
         }
         #endregion

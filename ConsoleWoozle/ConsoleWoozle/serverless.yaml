@@ -6,7 +6,17 @@ Parameters:
     Type: String
     Description: Name of the lambda function
     MinLength: '0'
-    Default: Woozle
+    Default: BuildSolution
+  EnvironmentPrefix:
+    Type: String
+    Description: Prefix of the environment
+    MinLength: '0'
+    Default: Woozle-
+  BucketName:
+    Type: String
+    Description: S3 Bucket name
+    MinLength: '0'
+    Default: s3-woozle
 
 Resources:
   WoozleRole:
@@ -35,8 +45,8 @@ Resources:
                   - lambda:GetFunctionConfiguration
                 Effect: Allow
                 Resource:
-                  - {"Fn::Join": ["", ["arn:aws:lambda:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":lambda", {"Ref": "LambdaName"}, "*"]]}
-                  - {"Fn::Join": ["", ["arn:aws:lambda:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":functionlambda", {"Ref": "LambdaName"}, "*"]]}
+                  - {"Fn::Join": ["", ["arn:aws:lambda:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":lambda-", {"Ref": "EnvironmentPrefix"}, {"Ref": "LambdaName"}, "*"]]}
+                  - {"Fn::Join": ["", ["arn:aws:lambda:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":functionlambda-", {"Ref": "EnvironmentPrefix"}, {"Ref": "LambdaName"}, "*"]]}
               -
                 Action:
                   - secretsmanager:ListSecrest
@@ -58,14 +68,26 @@ Resources:
                   - kms:Decrypt
                 Effect: Allow
                 Resource: "*"
+              -
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObjectVersionAcl
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Effect: Allow
+                Resource:
+                  - {"Fn::Join": ["", ["arn:aws:s3:::", "woozle"]]}
+                  - {"Fn::Join": ["", ["arn:aws:s3:::", "woozle/*"]]}
       Description: "Role for Woozle"
       RoleName: WoozleRole
 
   CreateFileFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: CreateWoozleFile
-      Handler: ConsoleWoozle::ConsoleWoozle.Function::CreateFile
+      FunctionName: {"Fn::Join": ["", {"Ref": "EnvironmentPrefix"},{"Ref": "LambdaName"}]}
+      Handler: ConsoleWoozle::ConsoleWoozle.Functions::BuildSolution
       Runtime: net6.0
       CodeUri: ''
       ProvisionedConcurrencyConfig:
@@ -74,3 +96,37 @@ Resources:
       Timeout: 30
       Role:
         {"Fn::GetAtt" : ["WoozleRole", "Arn"]}
+
+  WoozleBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      BucketName: 
+        - Ref: BucketName
+      AccessControl: Private
+
+  RestrictPutToSecureTransport:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: WoozleBucket
+      PolicyDocument:
+        Statement:
+          -
+            Sid: "RestrictPutToSecureTransport"
+            Action:
+              - "s3:PutObject"
+            Effect: "Deny"
+            Resource: 
+              Fn::Join:
+                - ""
+                -
+                  - "arn:aws:s3:::"
+                  -
+                    Ref: BucketName
+                  - "/*"
+            Principal: "*"
+            Condition:
+              Bool:
+                aws:SecureTransport: false

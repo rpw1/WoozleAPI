@@ -12,6 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="TestData\BillieEilishArtist.json" />
+    <None Remove="TestData\StillWoozyArtist.json" />
+    <None Remove="TestData\SZAArtist.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="..\ConsoleWoozle\appsettings.json" Link="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

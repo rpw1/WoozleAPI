@@ -9,7 +9,7 @@ namespace ConsoleWoozleTest.Mocks
 {
     public class MockSpotifyAPIService : ISpotifyAPIService
     {
-        public Task<SpotifyAlbumResponse> GetAlbum(string albumId)
+        public Task<SpotifyAlbumResponse> GetAlbumAsync(string albumId)
         {
             if (albumId == "SOS")
             {
@@ -34,19 +34,36 @@ namespace ConsoleWoozleTest.Mocks
             return null;
         }
 
-        public Task<SpotifyBaseResponse> GetArtist(string artistId)
+        public Task<SpotifyArtistResponse> GetArtistAsync(string artistId)
         {
             if (artistId == "Billie")
             {
-                return LoadTestData<SpotifyBaseResponse>("BillieArtist.json");
+                return LoadTestData<SpotifyArtistResponse>("BillieEilishArtist.json");
             }
             else if (artistId == "SZA")
             {
-                return LoadTestData<SpotifyBaseResponse>("SZAArtist.json");
+                return LoadTestData<SpotifyArtistResponse>("SZAArtist.json");
+            }
+            else if (artistId == "Woozy")
+            {
+                return LoadTestData<SpotifyArtistResponse>("StillWoozyArtist.json");
+            }
+            return null;
+        }
+
+        public Task<SpotifyBaseResponse> GetArtistAlbumsAsync(string artistId)
+        {
+            if (artistId == "Billie")
+            {
+                return LoadTestData<SpotifyBaseResponse>("BillieArtistAlbums.json");
+            }
+            else if (artistId == "SZA")
+            {
+                return LoadTestData<SpotifyBaseResponse>("SZAArtistAlbums.json");
             }
             else if(artistId == "Woozy")
             {
-                return LoadTestData<SpotifyBaseResponse>("WoozyArtist.json");
+                return LoadTestData<SpotifyBaseResponse>("WoozyArtistAlbums.json");
             }
             return null;
         }

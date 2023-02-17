@@ -2,7 +2,7 @@
 
 namespace ConsoleWoozle.Domain.SpotifyAPIResponses
 {
-    public class SpotifyTrackResponse : SpotifyCommonFields
+    public class SpotifyTrackResponse : SpotifyCommonAlbumTrackFields
     {
         [JsonPropertyName("disc_number")]
         public int? DiscNumber { get; set; }

@@ -1,6 +1,7 @@
 ﻿using ConsoleWoozle.Configuration;
 using ConsoleWoozle.Domain;
 using ConsoleWoozle.Domain.SpotifyAPIResponses;
+using Microsoft.AspNetCore.Authentication;
 using System;
 using System.Buffers.Text;
 using System.Collections.Generic;
@@ -13,12 +14,12 @@ namespace ConsoleWoozle.Services
 {
     public interface ISpotifyAPIService
     {
-        public Task<SpotifyBaseResponse?> GetArtist(string artistId);
-        public Task<SpotifyAlbumResponse?> GetAlbum(string albumId);
+        public Task<SpotifyArtistResponse?> GetArtistAsync(string artistId);
+        public Task<SpotifyBaseResponse?> GetArtistAlbumsAsync(string artistId);
+        public Task<SpotifyAlbumResponse?> GetAlbumAsync(string albumId);
     }
 
-    public class SpotifyAPIService : ISpotifyAPIService
-    {
+    public class SpotifyAPIService : ISpotifyAPIService { 
         #region Fields
         private readonly SpotifyConfiguration? _configuration;
         private SpotifyCredentials? _spotifyCredentials;
@@ -27,6 +28,7 @@ namespace ConsoleWoozle.Services
         private readonly string ARTISTS = "/artists/";
         private readonly string ALBUMS = "/albums";
         private readonly HttpClient _httpClient;
+        private static string? _bearerToken;
         #endregion
 
         public SpotifyAPIService(SpotifyConfiguration configuration, ISecretsManagementService secretsManagementService,
@@ -38,32 +40,26 @@ namespace ConsoleWoozle.Services
         }
 
         #region GetArtist
-        public async Task<SpotifyBaseResponse?> GetArtist(string artistId)
+        public Task<SpotifyArtistResponse?> GetArtistAsync(string artistId)
         {
-            string authenticationToken = await GetBearerTokenAsync().ConfigureAwait(false);
+            var request = new HttpRequestMessage(HttpMethod.Get, _configuration?.BaseUrl + ARTISTS + artistId);
+            return BuildRequest<SpotifyArtistResponse>(request);
+        }
+        #endregion
 
+        #region GetArtistAlbums
+        public Task<SpotifyBaseResponse?> GetArtistAlbumsAsync(string artistId)
+        {
             var request = new HttpRequestMessage(HttpMethod.Get, _configuration?.BaseUrl + ARTISTS + artistId + ALBUMS + QUERY_PARAMS);
-            request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + authenticationToken);
-
-            HttpResponseMessage response = await _httpClient.SendAsync(request).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-
-            return await JsonSerializer.DeserializeAsync<SpotifyBaseResponse>(response.Content.ReadAsStream()).ConfigureAwait(false);
+            return BuildRequest<SpotifyBaseResponse>(request);
         }
         #endregion
 
         #region GetAlbum
-        public async Task<SpotifyAlbumResponse?> GetAlbum(string albumId)
+        public Task<SpotifyAlbumResponse?> GetAlbumAsync(string albumId)
         {
-            string authenticationToken = await GetBearerTokenAsync().ConfigureAwait(false);
-
             var request = new HttpRequestMessage(HttpMethod.Get, _configuration?.BaseUrl + ALBUMS + "/" + albumId);
-            request.Headers.TryAddWithoutValidation("Authorization", "Bearer " + authenticationToken);
-
-            HttpResponseMessage response = await _httpClient.SendAsync(request).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-
-            return await JsonSerializer.DeserializeAsync<SpotifyAlbumResponse>(response.Content.ReadAsStream()).ConfigureAwait(false);
+            return BuildRequest<SpotifyAlbumResponse>(request);
         }
         #endregion
 
@@ -81,16 +77,35 @@ namespace ConsoleWoozle.Services
             request.Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
             {
                 new KeyValuePair<string, string>("grant_type", "client_credentials")
-            }); ;
-            HttpResponseMessage response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+            });
 
-            response.EnsureSuccessStatusCode();
-            var deserializedResponse = await JsonSerializer.DeserializeAsync<SpotifyAuthenticationResponse>(response.Content.ReadAsStream()).ConfigureAwait(false);
+            var deserializedResponse = await SendRequest<SpotifyAuthenticationResponse>(request).ConfigureAwait(false);
+
             if (deserializedResponse?.AccessToken != null && deserializedResponse.TokenType != null)
             {
                 return deserializedResponse.TokenType + " " + deserializedResponse.AccessToken;
             }
             throw new Exception("Successful Responses with bad Data");
+        }
+        #endregion
+
+        #region Build and Send Request
+        private async Task<T?> BuildRequest<T>(HttpRequestMessage request)
+        {
+            if (_bearerToken== null)
+            {
+                _bearerToken = await GetBearerTokenAsync().ConfigureAwait(false);
+            }
+            request.Headers.TryAddWithoutValidation("Authorization", _bearerToken);
+            return await SendRequest<T>(request).ConfigureAwait(false);
+        }
+
+        private async Task<T?> SendRequest<T>(HttpRequestMessage request)
+        {
+            HttpResponseMessage response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+
+            response.EnsureSuccessStatusCode();
+            return await JsonSerializer.DeserializeAsync<T>(response.Content.ReadAsStream()).ConfigureAwait(false);
         }
         #endregion
 

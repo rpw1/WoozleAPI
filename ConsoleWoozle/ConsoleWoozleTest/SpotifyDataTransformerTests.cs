@@ -20,16 +20,16 @@ namespace ConsoleWoozleTest
         [Fact]
         public async void Test_Artist_Transform()
         {
-            SpotifyBaseResponse artistResponse = await _spotifyAPIService.GetArtist("Woozy").ConfigureAwait(false);
+            SpotifyBaseResponse artistResponse = await _spotifyAPIService.GetArtistAlbumsAsync("Woozy").ConfigureAwait(false);
             var transformedData = SpotifyDataTransformer.TransformBaseResponse(artistResponse.Href, artistResponse);
             
-            SpotifyAlbumResponse nice = await _spotifyAPIService.GetAlbum("Nice").ConfigureAwait(false);
+            SpotifyAlbumResponse nice = await _spotifyAPIService.GetAlbumAsync("Nice").ConfigureAwait(false);
             transformedData.TransformAndAddAlbumResponse(nice);
 
-            SpotifyAlbumResponse kenny = await _spotifyAPIService.GetAlbum("Kenny").ConfigureAwait(false);
+            SpotifyAlbumResponse kenny = await _spotifyAPIService.GetAlbumAsync("Kenny").ConfigureAwait(false);
             transformedData.TransformAndAddAlbumResponse(kenny);
 
-            SpotifyAlbumResponse pool = await _spotifyAPIService.GetAlbum("Pool").ConfigureAwait(false);
+            SpotifyAlbumResponse pool = await _spotifyAPIService.GetAlbumAsync("Pool").ConfigureAwait(false);
             transformedData.TransformAndAddAlbumResponse(pool);
 
             Assert.Equal(18, transformedData.Albums.Count);

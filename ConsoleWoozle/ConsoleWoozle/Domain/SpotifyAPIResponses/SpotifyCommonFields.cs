@@ -2,23 +2,16 @@
 
 namespace ConsoleWoozle.Domain.SpotifyAPIResponses
 {
+
     public class SpotifyCommonFields
     {
-        [JsonPropertyName("artists")]
-        public List<Dictionary<string, object>>? Artists { get; set; }
-
-        [JsonPropertyName("available_markets")]
-        public List<string>? AvailableMarkets { get; set; }
-
         [JsonPropertyName("external_urls")]
         public List<Dictionary<string, object>>? ExternalUrls { get; set; }
-
         [JsonPropertyName("href")]
         public string? Href { get; set; }
 
         [JsonPropertyName("id")]
         public string? Id { get; set; }
-
         [JsonPropertyName("name")]
         public string? Name { get; set; }
 
@@ -27,6 +20,15 @@ namespace ConsoleWoozle.Domain.SpotifyAPIResponses
 
         [JsonPropertyName("uri")]
         public string? Uri { get; set; }
+    }
+    public class SpotifyCommonAlbumTrackFields : SpotifyCommonFields
+    {
+        [JsonPropertyName("artists")]
+        public List<Dictionary<string, object>>? Artists { get; set; }
+
+        [JsonPropertyName("available_markets")]
+        public List<string>? AvailableMarkets { get; set; }
+        
     }
 
     public class SpotifyCommonAlbumFields : SpotifyCommonFields
