@@ -27,6 +27,7 @@ namespace ConsoleWoozle.Services
         private readonly string QUERY_PARAMS = "?include_groups=album,single&limit=50";
         private readonly string ARTISTS = "/artists/";
         private readonly string ALBUMS = "/albums";
+        private readonly string PLAYLISTS = "/playlists/";
         private readonly HttpClient _httpClient;
         private static string? _bearerToken;
         #endregion
@@ -50,7 +51,7 @@ namespace ConsoleWoozle.Services
         #region GetArtistAlbums
         public Task<SpotifyBaseResponse?> GetArtistAlbumsAsync(string artistId)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, _configuration?.BaseUrl + ARTISTS + artistId + ALBUMS + QUERY_PARAMS);
+            HttpRequestMessage request = new(HttpMethod.Get, _configuration?.BaseUrl + ARTISTS + artistId + ALBUMS + QUERY_PARAMS);
             return BuildRequest<SpotifyBaseResponse>(request);
         }
         #endregion
@@ -58,8 +59,17 @@ namespace ConsoleWoozle.Services
         #region GetAlbum
         public Task<SpotifyAlbumResponse?> GetAlbumAsync(string albumId)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, _configuration?.BaseUrl + ALBUMS + "/" + albumId);
+            HttpRequestMessage request = new(HttpMethod.Get, _configuration?.BaseUrl + ALBUMS + "/" + albumId);
             return BuildRequest<SpotifyAlbumResponse>(request);
+        }
+        #endregion
+
+        #region GetPlaylist
+        public Task<> GetPlaylistAsync(string playlistUrl)
+        {
+            string playlistId = playlistUrl.Substring(33,56);
+            HttpRequestMessage request = new(HttpMethod.Get, _configuration?.BaseUrl + PLAYLISTS + playlistId);
+            return BuildRequest<SpotifyBaseResponse>(request)
         }
         #endregion
 
@@ -72,7 +82,7 @@ namespace ConsoleWoozle.Services
             }
             var credentialAuthorization = Convert.ToBase64String(Encoding.UTF8.GetBytes(_spotifyCredentials?.ClientId + ":" + _spotifyCredentials?.ClientSecret));
 
-            var request = new HttpRequestMessage(HttpMethod.Post, _configuration?.AutenticationUrl);
+            HttpRequestMessage request = new(HttpMethod.Post, _configuration?.AutenticationUrl);
             request.Headers.TryAddWithoutValidation("Authorization", credentialAuthorization);
             request.Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
             {

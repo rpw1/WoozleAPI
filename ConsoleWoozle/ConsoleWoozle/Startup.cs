@@ -73,6 +73,11 @@ namespace ConsoleWoozle
         {
             return _serviceProvider?.GetService<IBuildSolutionService>();
         }
+
+        public IS3Service? GetS3Service()
+        {
+            return _serviceProvider?.GetService<IS3Service>();
+        }
         #endregion
 
         #region ConfigureHttpClient(IServiceCollection services)
@@ -161,7 +166,7 @@ namespace ConsoleWoozle
             return new S3Configuration
             {
                 RegionEndpoint = RegionEndpoint.USEast1,
-                Bucket = configuration.GetValue<string>(ConfigurationKeys.S3BucketPath)
+                BucketName = configuration.GetValue<string>(ConfigurationKeys.S3BucketPath)
             };
         }
         #endregion
